@@ -1,0 +1,847 @@
+# ======================================================================
+# MuzzleFlash_Particles.nk
+# NukeX 13.2v1 — Muzzle Flash Particle System
+# ======================================================================
+#
+# Flash types:
+#   1. Star Flash     — 8-ray starburst (camera iris diffraction look)
+#   2. Hot Gas Flash  — layered expanding fireball (core / mid / outer)
+#   3. Spark Flash    — ballistic sparks with gravity arcs
+#   4. Smoke Puff     — diffuse post-flash cloud (delayed 2 frames)
+#
+# Usage:
+#   File > Insert Comp Nodes  (or drag the .nk file into the DAG)
+#   Reposition the whole effect by moving 'MuzzleFlash_Origin'.
+#   Aim sparks along the barrel by rotating 'Spark_BarrelAxis' on Y.
+#
+# Timing:
+#   Flash fires on frame 1, emits for 2 frames (frames 1-3).
+#   Smoke trails from frame 5 and emits for 8 frames.
+#   Change start_frame / end_frame on the emitters to match your shot.
+#
+# Knob-name note:
+#   Knob names follow the NukeX 13.2 Python/TCL API. If a property
+#   appears missing after loading, open the node's Properties panel
+#   and set it manually — it may use a slightly different name in
+#   your build of Nuke.
+#
+# Compositing:
+#   All four flash types are merged additively (Merge 'plus') into
+#   'MuzzleFlash_FINAL'. Feed that into a Screen or Plus merge above
+#   your plate for the final comp.
+# ======================================================================
+
+
+# ——————————————————————————————————————————————————————————————————————
+#  SHARED NODES
+# ——————————————————————————————————————————————————————————————————————
+
+Axis2 {
+ inputs 0
+ name MuzzleFlash_Origin
+ label "Move / animate me to\nreposition the entire effect"
+ xpos 0
+ ypos 0
+}
+set MF_ORIGIN [stack 0]
+
+Camera2 {
+ inputs 0
+ translate {0 0 500}
+ focal 50
+ name MuzzleFlash_Cam
+ xpos 200
+ ypos -280
+}
+set MF_CAM [stack 0]
+
+
+# ======================================================================
+#  SECTION 1 — STAR FLASH  (8-pointed starburst)
+#
+#  Eight sub-axes are each rotated 45° further around Z.  Each one
+#  drives a tight-spread emitter (spread 0.02 ≈ pencil beam) so the
+#  particles form a ray.  A central bloom adds the overexposed core.
+# ======================================================================
+
+BackdropNode {
+ inputs 0
+ label "STAR FLASH\n8-ray starburst"
+ note_font_size 26
+ xpos -1560
+ ypos 100
+ bdwidth 1040
+ bdheight 900
+ tile_color 0x1f2e38ff
+}
+
+# ── Ray 0  ·  0° ──────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 0}
+ name Star_RayAxis_00
+ xpos -1500
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_00
+ xpos -1500
+ ypos 360
+}
+set star_e0 [stack 0]
+
+# ── Ray 1  ·  45° ─────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 45}
+ name Star_RayAxis_01
+ xpos -1390
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_01
+ xpos -1390
+ ypos 360
+}
+set star_e1 [stack 0]
+
+# ── Ray 2  ·  90° ─────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 90}
+ name Star_RayAxis_02
+ xpos -1280
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_02
+ xpos -1280
+ ypos 360
+}
+set star_e2 [stack 0]
+
+# ── Ray 3  ·  135° ────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 135}
+ name Star_RayAxis_03
+ xpos -1170
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_03
+ xpos -1170
+ ypos 360
+}
+set star_e3 [stack 0]
+
+# ── Ray 4  ·  180° ────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 180}
+ name Star_RayAxis_04
+ xpos -1060
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_04
+ xpos -1060
+ ypos 360
+}
+set star_e4 [stack 0]
+
+# ── Ray 5  ·  225° ────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 225}
+ name Star_RayAxis_05
+ xpos -950
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_05
+ xpos -950
+ ypos 360
+}
+set star_e5 [stack 0]
+
+# ── Ray 6  ·  270° ────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 270}
+ name Star_RayAxis_06
+ xpos -840
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_06
+ xpos -840
+ ypos 360
+}
+set star_e6 [stack 0]
+
+# ── Ray 7  ·  315° ────────────────────────────────────────────────────
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 315}
+ name Star_RayAxis_07
+ xpos -730
+ ypos 220
+}
+ParticleEmitter {
+ inputs 1
+ birth_rate 18
+ life 4
+ life_variance 0.08
+ speed 420
+ speed_variance 0.07
+ size 1.8
+ size_variance 0.25
+ spread 0.02
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Emit_07
+ xpos -730
+ ypos 360
+}
+set star_e7 [stack 0]
+
+# ── Central bloom burst ───────────────────────────────────────────────
+push $MF_ORIGIN
+ParticleEmitter {
+ inputs 1
+ birth_rate 90
+ life 3
+ life_variance 0.15
+ speed 18
+ speed_variance 0.5
+ size 14
+ size_variance 0.4
+ spread 1.0
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name Star_Bloom
+ xpos -620
+ ypos 360
+}
+set star_ebloom [stack 0]
+
+# ── ParticleToImage (particle pipe → 2-D image) ───────────────────────
+push $star_e0
+ParticleToImage {
+ inputs 1
+ name Star_P2I_00
+ xpos -1500
+ ypos 530
+}
+set star_r0 [stack 0]
+
+push $star_e1
+ParticleToImage {
+ inputs 1
+ name Star_P2I_01
+ xpos -1390
+ ypos 530
+}
+set star_r1 [stack 0]
+
+push $star_e2
+ParticleToImage {
+ inputs 1
+ name Star_P2I_02
+ xpos -1280
+ ypos 530
+}
+set star_r2 [stack 0]
+
+push $star_e3
+ParticleToImage {
+ inputs 1
+ name Star_P2I_03
+ xpos -1170
+ ypos 530
+}
+set star_r3 [stack 0]
+
+push $star_e4
+ParticleToImage {
+ inputs 1
+ name Star_P2I_04
+ xpos -1060
+ ypos 530
+}
+set star_r4 [stack 0]
+
+push $star_e5
+ParticleToImage {
+ inputs 1
+ name Star_P2I_05
+ xpos -950
+ ypos 530
+}
+set star_r5 [stack 0]
+
+push $star_e6
+ParticleToImage {
+ inputs 1
+ name Star_P2I_06
+ xpos -840
+ ypos 530
+}
+set star_r6 [stack 0]
+
+push $star_e7
+ParticleToImage {
+ inputs 1
+ name Star_P2I_07
+ xpos -730
+ ypos 530
+}
+set star_r7 [stack 0]
+
+push $star_ebloom
+ParticleToImage {
+ inputs 1
+ name Star_Bloom_P2I
+ xpos -620
+ ypos 530
+}
+Glow {
+ size 40
+ intensity 0.8
+ name Star_Bloom_Glow
+ xpos -620
+ ypos 650
+}
+set star_rbloom [stack 0]
+
+# ── Additive merge chain for all 9 ray renders ────────────────────────
+push $star_r0
+push $star_r1
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_01
+ xpos -1390
+ ypos 780
+}
+push $star_r2
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_02
+ xpos -1280
+ ypos 850
+}
+push $star_r3
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_03
+ xpos -1170
+ ypos 920
+}
+push $star_r4
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_04
+ xpos -1060
+ ypos 990
+}
+push $star_r5
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_05
+ xpos -950
+ ypos 1060
+}
+push $star_r6
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_06
+ xpos -840
+ ypos 1130
+}
+push $star_r7
+Merge2 {
+ inputs 2
+ operation plus
+ name Star_Merge_07
+ xpos -730
+ ypos 1200
+}
+push $star_rbloom
+Merge2 {
+ inputs 2
+ operation plus
+ name StarFlash_MERGE
+ xpos -620
+ ypos 1270
+}
+set STAR_FINAL [stack 0]
+
+
+# ======================================================================
+#  SECTION 2 — HOT GAS FLASH  (layered fireball)
+#
+#  Three concentric emitter shells build depth and colour variation:
+#    Core  — white-hot, tight spread, fast
+#    Mid   — yellow, full sphere, gravity pull
+#    Outer — orange, turbulence + gravity, slow
+# ======================================================================
+
+BackdropNode {
+ inputs 0
+ label "HOT GAS FLASH\nlayered fireball"
+ note_font_size 26
+ xpos -460
+ ypos 100
+ bdwidth 600
+ bdheight 900
+ tile_color 0x382414ff
+}
+
+# ── Core: white-hot ───────────────────────────────────────────────────
+push $MF_ORIGIN
+ParticleEmitter {
+ inputs 1
+ birth_rate 130
+ life 3
+ life_variance 0.2
+ speed 75
+ speed_variance 0.4
+ size 5
+ size_variance 0.5
+ spread 0.75
+ color {4 4 4 1}
+ start_frame 1
+ end_frame 3
+ name HotGas_Core
+ xpos -400
+ ypos 260
+}
+set hg_e_core [stack 0]
+
+# ── Mid shell: yellow ─────────────────────────────────────────────────
+push $MF_ORIGIN
+ParticleEmitter {
+ inputs 1
+ birth_rate 85
+ life 5
+ life_variance 0.3
+ speed 48
+ speed_variance 0.5
+ size 9
+ size_variance 0.5
+ spread 1.0
+ color {4 3.6 0.4 1}
+ start_frame 1
+ end_frame 3
+ name HotGas_Mid
+ xpos -240
+ ypos 260
+}
+ParticleGravity {
+ inputs 1
+ magnitude 35
+ name HotGas_Mid_Grav
+ xpos -240
+ ypos 400
+}
+set hg_e_mid [stack 0]
+
+# ── Outer fringe: orange, turbulent ──────────────────────────────────
+push $MF_ORIGIN
+ParticleEmitter {
+ inputs 1
+ birth_rate 65
+ life 7
+ life_variance 0.4
+ speed 24
+ speed_variance 0.6
+ size 15
+ size_variance 0.7
+ spread 1.0
+ color {4 1.8 0.2 1}
+ start_frame 1
+ end_frame 3
+ name HotGas_Outer
+ xpos -80
+ ypos 260
+}
+ParticleTurbulence {
+ inputs 1
+ intensity 18
+ frequency 0.3
+ name HotGas_Outer_Turb
+ xpos -80
+ ypos 400
+}
+ParticleGravity {
+ inputs 1
+ magnitude 22
+ name HotGas_Outer_Grav
+ xpos -80
+ ypos 540
+}
+set hg_e_outer [stack 0]
+
+# ── Render ────────────────────────────────────────────────────────────
+push $hg_e_core
+ParticleToImage {
+ inputs 1
+ name HotGas_Core_P2I
+ xpos -400
+ ypos 560
+}
+set hg_r_core [stack 0]
+
+push $hg_e_mid
+ParticleToImage {
+ inputs 1
+ name HotGas_Mid_P2I
+ xpos -240
+ ypos 620
+}
+set hg_r_mid [stack 0]
+
+push $hg_e_outer
+ParticleToImage {
+ inputs 1
+ name HotGas_Outer_P2I
+ xpos -80
+ ypos 720
+}
+set hg_r_outer [stack 0]
+
+push $hg_r_core
+push $hg_r_mid
+Merge2 {
+ inputs 2
+ operation plus
+ name HotGas_Merge_01
+ xpos -240
+ ypos 840
+}
+push $hg_r_outer
+Merge2 {
+ inputs 2
+ operation plus
+ name HotGasFlash_MERGE
+ xpos -80
+ ypos 910
+}
+set GAS_FINAL [stack 0]
+
+
+# ======================================================================
+#  SECTION 3 — SPARK FLASH  (ballistic sparks)
+#
+#  'Spark_BarrelAxis' inherits position from MuzzleFlash_Origin.
+#  Rotate it on Y (or Z) to aim the main sparks along the gun barrel.
+#  Gravity bends trajectories into realistic parabolic arcs.
+# ======================================================================
+
+BackdropNode {
+ inputs 0
+ label "SPARK FLASH\nballistic sparks"
+ note_font_size 26
+ xpos 390
+ ypos 100
+ bdwidth 540
+ bdheight 900
+ tile_color 0x382e14ff
+}
+
+# Barrel-direction axis
+push $MF_ORIGIN
+Axis2 {
+ inputs 1
+ rotate {0 0 0}
+ name Spark_BarrelAxis
+ label "Rotate Y to aim barrel"
+ xpos 450
+ ypos 220
+}
+set BARREL_AX [stack 0]
+
+# ── Main sparks: tight forward cone ──────────────────────────────────
+push $BARREL_AX
+ParticleEmitter {
+ inputs 1
+ birth_rate 45
+ life 14
+ life_variance 0.5
+ speed 720
+ speed_variance 0.38
+ size 1.6
+ size_variance 0.8
+ spread 0.18
+ color {5 3.2 0.4 1}
+ start_frame 1
+ end_frame 3
+ name Spark_Main
+ xpos 450
+ ypos 360
+}
+ParticleGravity {
+ inputs 1
+ magnitude 120
+ name Spark_Main_Grav
+ xpos 450
+ ypos 500
+}
+set sp_e_main [stack 0]
+
+# ── Scatter sparks: wide, chaotic ────────────────────────────────────
+push $MF_ORIGIN
+ParticleEmitter {
+ inputs 1
+ birth_rate 38
+ life 9
+ life_variance 0.6
+ speed 290
+ speed_variance 0.6
+ size 1.1
+ size_variance 1.0
+ spread 0.55
+ color {4 1.8 0.2 1}
+ start_frame 1
+ end_frame 3
+ name Spark_Scatter
+ xpos 620
+ ypos 360
+}
+ParticleGravity {
+ inputs 1
+ magnitude 95
+ name Spark_Scatter_Grav
+ xpos 620
+ ypos 500
+}
+set sp_e_scatter [stack 0]
+
+# ── Render ────────────────────────────────────────────────────────────
+push $sp_e_main
+ParticleToImage {
+ inputs 1
+ name Spark_Main_P2I
+ xpos 450
+ ypos 680
+}
+set sp_r_main [stack 0]
+
+push $sp_e_scatter
+ParticleToImage {
+ inputs 1
+ name Spark_Scatter_P2I
+ xpos 620
+ ypos 680
+}
+set sp_r_scatter [stack 0]
+
+push $sp_r_main
+push $sp_r_scatter
+Merge2 {
+ inputs 2
+ operation plus
+ name SparkFlash_MERGE
+ xpos 560
+ ypos 840
+}
+set SPARK_FINAL [stack 0]
+
+
+# ======================================================================
+#  SECTION 4 — SMOKE PUFF  (delayed post-flash cloud)
+#
+#  start_frame=5 means smoke appears 2 frames after the flash fires.
+#  Large, semi-transparent particles with turbulence + upward wind
+#  create a natural billow.  Increase 'life' for a lingering trail.
+# ======================================================================
+
+BackdropNode {
+ inputs 0
+ label "SMOKE PUFF\npost-flash cloud"
+ note_font_size 26
+ xpos 1040
+ ypos 100
+ bdwidth 380
+ bdheight 900
+ tile_color 0x262626ff
+}
+
+push $MF_ORIGIN
+ParticleEmitter {
+ inputs 1
+ birth_rate 22
+ life 28
+ life_variance 0.45
+ speed 8
+ speed_variance 0.7
+ size 38
+ size_variance 0.65
+ spread 0.9
+ color {0.16 0.13 0.10 0.55}
+ start_frame 5
+ end_frame 13
+ name Smoke_Emit
+ xpos 1140
+ ypos 260
+}
+ParticleTurbulence {
+ inputs 1
+ intensity 24
+ frequency 0.18
+ octaves 3
+ name Smoke_Turb
+ xpos 1140
+ ypos 400
+}
+ParticleWind {
+ inputs 1
+ direction {0 1 0}
+ strength 14
+ name Smoke_Wind
+ xpos 1140
+ ypos 540
+}
+ParticleToImage {
+ inputs 1
+ name Smoke_P2I
+ xpos 1140
+ ypos 680
+}
+set SMOKE_FINAL [stack 0]
+
+
+# ======================================================================
+#  FINAL COMPOSITE  —  additive merge of all four flash types
+#
+#  'MuzzleFlash_FINAL' outputs the combined effect.
+#  Connect it to a Merge (Screen or Plus) over your background plate.
+# ======================================================================
+
+push $STAR_FINAL
+push $GAS_FINAL
+Merge2 {
+ inputs 2
+ operation plus
+ name Final_Merge_01
+ xpos -200
+ ypos 1580
+}
+push $SPARK_FINAL
+Merge2 {
+ inputs 2
+ operation plus
+ name Final_Merge_02
+ xpos -100
+ ypos 1650
+}
+push $SMOKE_FINAL
+Merge2 {
+ inputs 2
+ operation plus
+ name MuzzleFlash_FINAL
+ label "Connect to your comp from here"
+ xpos 0
+ ypos 1720
+}
